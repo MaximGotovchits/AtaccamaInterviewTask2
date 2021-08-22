@@ -1,5 +1,6 @@
 package com.project.ataccama2.configuration;
 
+import com.project.ataccama2.util.ConnectionManager;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,8 +13,13 @@ public class BasicConfiguration {
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder
-                .setConnectTimeout(Duration.ofMillis(50))
-                .setReadTimeout(Duration.ofMillis(50))
+                .setConnectTimeout(Duration.ofMillis(2000))
+                .setReadTimeout(Duration.ofMillis(2000))
                 .build();
+    }
+
+    @Bean
+    public ConnectionManager connectionManager() {
+        return new ConnectionManager();
     }
 }
