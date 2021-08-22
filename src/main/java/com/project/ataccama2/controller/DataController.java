@@ -22,9 +22,7 @@ public class DataController {
     }
 
     @GetMapping("/tables")
-    public @ResponseBody Collection<String> getTables(
-            @RequestParam String name
-    ) {
+    public @ResponseBody Collection<String> getTables(@RequestParam String name) throws Exception {
         return dataService.getTables(name);
     }
 }

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,22 +34,21 @@ public class DataService {
                 .collect(Collectors.toList());
     }
 
-    public Collection<String> getTables(String name) {
+    public Collection<String> getTables(String name) throws Exception {
         UriComponentsBuilder queryBuilder = UriComponentsBuilder.fromHttpUrl("http://localhost:8081/credentials/find")
                 .queryParam("name", name);
         JsonNode credentials = restTemplate.getForEntity(queryBuilder.toUriString(), JsonNode.class, name).getBody();
 
         Iterator<Map.Entry<String, JsonNode>> responseFields = Objects.requireNonNull(credentials).fields();
         JdbcTemplate jdbcTemplate = connectionManager.getJdbcTemplate(new DBConnection(responseFields));
-        List<String> result = jdbcTemplate.query("SHOW TABLES;", resultSet -> {
+
+        return jdbcTemplate.query("SHOW TABLES;", resultSet -> {
             List<String> res = new ArrayList<>();
             while (resultSet.next()) {
                 res.add(resultSet.getString(1));
             }
             return res;
         });
-
-        return result;
     }
 
     public Collection<String> getColumns(String databaseName, String tableName) {

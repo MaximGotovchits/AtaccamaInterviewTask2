@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.util.Iterator;
 import java.util.Map;
 
-@Getter
+@Data
 public class DBConnection {
     private final String dbPrefix = "jdbc:mysql://";
     private String host;

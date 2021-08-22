@@ -2,22 +2,26 @@ package com.project.ataccama2.util;
 
 import com.project.ataccama2.model.DBConnection;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ConnectionManager {
     private final Map<DBConnection, JdbcTemplate> connectionToDataSource = new ConcurrentHashMap<>();
+    private final ReadWriteLock clearCacheLock = new ReentrantReadWriteLock();
 
-//    private static final Integer CONNECTION_LIMIT = 1000;
+    private static final Integer CONNECTION_LIMIT = 5;
 
-    public JdbcTemplate getJdbcTemplate(DBConnection dbConnection) {
-//        Can be modified in future to cache not more than 1000 of connections.
+    public JdbcTemplate getJdbcTemplate(DBConnection dbConnection) throws Exception {
+//        Can be modified in future to cache not more than 1000 of connections using heap-like data structure (e.g. ConcurrentSkipListMap).
 //        if (connectionToFreq.size() > CONNECTION_LIMIT) {
 //            synchronized(this) {
 //                while (connectionToFreq.size() > CONNECTION_LIMIT) {
@@ -25,10 +29,37 @@ public class ConnectionManager {
 //                }
 //            }
 //        }
-        return connectionToDataSource.computeIfAbsent(dbConnection, conn -> new JdbcTemplate(initDataSource(conn)));
+        if (connectionToDataSource.size() > CONNECTION_LIMIT) {
+            try {
+                clearCacheLock.writeLock().lock(); // Only 1 thread can clean the cache.
+                Set<DBConnection> dbConnectionSet = connectionToDataSource.keySet();
+                for (DBConnection connectionToRemove : dbConnectionSet) {
+                    DataSource dataSourceToClose = connectionToDataSource.get(connectionToRemove).getDataSource();
+                    if (dataSourceToClose != null) {
+                        ((HikariDataSource) dataSourceToClose).close();
+                    }
+                    connectionToDataSource.remove(connectionToRemove);
+                    if (connectionToDataSource.size() <= CONNECTION_LIMIT / 2) {
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                throw new Exception("Failed to clean connection cache: " + e.getMessage());
+            } finally {
+                clearCacheLock.writeLock().unlock();
+            }
+        }
+        try {
+            clearCacheLock.readLock().lock();
+            return connectionToDataSource.computeIfAbsent(dbConnection, conn -> new JdbcTemplate(initDataSource(conn)));
+        } catch (Exception e) {
+            throw new Exception("Failed to get a connection: " + e.getMessage());
+        } finally {
+            clearCacheLock.readLock().unlock();
+        }
     }
 
-    private DataSource initDataSource(DBConnection dbConnection) {
+    private HikariDataSource initDataSource(DBConnection dbConnection) {
         return DataSourceBuilder.create()
                 .driverClassName("com.mysql.cj.jdbc.Driver")
                 .type(HikariDataSource.class)
