@@ -2,7 +2,6 @@ package com.project.ataccama2.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
-import lombok.Getter;
 
 import java.util.Iterator;
 import java.util.Map;
