@@ -25,4 +25,11 @@ public class DataController {
     public @ResponseBody Collection<String> getTables(@RequestParam String name) throws Exception {
         return dataService.getTables(name);
     }
+
+    @GetMapping("/columns")
+    public @ResponseBody Collection<String> getColumns(
+            @RequestParam String name,
+            @RequestParam String tableName) throws Exception {
+        return dataService.getColumns(name, tableName);
+    }
 }

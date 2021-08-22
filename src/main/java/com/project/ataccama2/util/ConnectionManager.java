@@ -49,7 +49,7 @@ public class ConnectionManager {
         }
         try {
             clearCacheLock.readLock().lock();
-            return connectionToDataSource.computeIfAbsent(dbConnection, conn -> new JdbcTemplate(initDataSource(conn)));
+            return connectionToDataSource.computeIfAbsent(dbConnection, conn -> new JdbcTemplate(initDataSource(dbConnection)));
         } catch (Exception e) {
             throw new Exception("Failed to get a connection: " + e.getMessage());
         } finally {
