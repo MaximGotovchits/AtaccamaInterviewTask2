@@ -19,14 +19,7 @@ public class ConnectionManager {
     private static final Integer CONNECTION_LIMIT = 5;
 
     public JdbcTemplate getJdbcTemplate(DBConnection dbConnection) throws Exception {
-//        Can be modified in future to cache not more than 1000 of connections using heap-like data structure (e.g. ConcurrentSkipListMap).
-//        if (connectionToFreq.size() > CONNECTION_LIMIT) {
-//            synchronized(this) {
-//                while (connectionToFreq.size() > CONNECTION_LIMIT) {
-//                    connectionToDataSource.remove(connectionToFreq.pollLast());
-//                }
-//            }
-//        }
+//        Can be modified in future to cache not more than CONNECTION_LIMIT of connections using heap-like data structure (e.g. ConcurrentSkipListMap).
         if (connectionToDataSource.size() > CONNECTION_LIMIT) {
             try {
                 clearCacheLock.writeLock().lock(); // Only 1 thread can clean the cache.

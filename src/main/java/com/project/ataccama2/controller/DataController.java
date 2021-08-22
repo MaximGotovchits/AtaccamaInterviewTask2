@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -22,14 +24,24 @@ public class DataController {
     }
 
     @GetMapping("/tables")
-    public @ResponseBody Collection<String> getTables(@RequestParam String name) throws Exception {
+    public @ResponseBody
+    Map<String, List<String>> getTables(@RequestParam String name) throws Exception {
         return dataService.getTables(name);
     }
 
     @GetMapping("/columns")
-    public @ResponseBody Collection<String> getColumns(
+    public @ResponseBody Map<String, List<String>> getColumns(
             @RequestParam String name,
             @RequestParam String tableName) throws Exception {
         return dataService.getColumns(name, tableName);
+    }
+
+    @GetMapping("/preview")
+    public @ResponseBody Map<String, List<String>> getPreview(
+            @RequestParam String name,
+            @RequestParam String tableName,
+            @RequestParam(defaultValue = "10") Integer limit,
+            @RequestParam(defaultValue = "0") Integer offset) throws Exception {
+        return dataService.previewData(name, tableName, limit, offset);
     }
 }
