@@ -1,5 +1,6 @@
 package com.project.ataccama2.controller;
 
+import com.project.ataccama2.model.Tables;
 import com.project.ataccama2.service.DataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public class DataController {
 
     @GetMapping("/tables")
     public @ResponseBody
-    Map<String, List<String>> getTables(@RequestParam String name) throws Exception {
+    Tables getTables(@RequestParam String name) throws Exception {
         return dataService.getTables(name);
     }
 

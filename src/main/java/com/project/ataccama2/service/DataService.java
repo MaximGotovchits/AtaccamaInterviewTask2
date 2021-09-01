@@ -2,6 +2,7 @@ package com.project.ataccama2.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.project.ataccama2.model.DBConnection;
+import com.project.ataccama2.model.Tables;
 import com.project.ataccama2.util.ConnectionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -35,10 +36,10 @@ public class DataService {
                 .collect(Collectors.toList());
     }
 
-    public Map<String, List<String>> getTables(String name) throws Exception {
+    public Tables getTables(String name) throws Exception {
         DBConnection dbConnection = getDbConnection(name);
         JdbcTemplate jdbcTemplate = getJdbcTemplateByName(dbConnection);
-        return queryForSingleColumnResult("SHOW TABLES;", jdbcTemplate);
+        return queryForTables("SHOW TABLES;", jdbcTemplate);
     }
 
     public Map<String, List<String>> getColumns(String name, String tableName) throws Exception {
@@ -53,7 +54,7 @@ public class DataService {
     }
 
     private void validateTableName(String name, String tableName) throws Exception {
-        if (!getTables(name).keySet().contains(tableName)) {
+        if (!getTables(name).getTableNames().contains(tableName)) {
             throw new RuntimeException(name + " does not contain table: " + tableName);
         }
     }
@@ -96,6 +97,22 @@ public class DataService {
                 }
             }
             return res;
+        }, args);
+    }
+
+    private Tables queryForTables(String query, JdbcTemplate jdbcTemplate, Object... args) {
+        return jdbcTemplate.query(query, resultSet -> {
+            Tables tables = new Tables();
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            while (resultSet.next()) {
+                int colAmount = metaData.getColumnCount();
+                for (int i = 1; i <= colAmount; ++i) {
+                    if (("TABLE_NAME").equals(metaData.getColumnName(i))) {
+                        tables.addTable(resultSet.getString(i));
+                    }
+                }
+            }
+            return tables;
         }, args);
     }
 }
