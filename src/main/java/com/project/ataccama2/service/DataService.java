@@ -42,11 +42,20 @@ public class DataService {
     }
 
     public Map<String, List<String>> getColumns(String name, String tableName) throws Exception {
+        // Example on how to handle possible SQL injection.
+        validateTableName(name, tableName);
+
         DBConnection dbConnection = getDbConnection(name);
         JdbcTemplate jdbcTemplate = getJdbcTemplateByName(dbConnection);
         return queryForSingleColumnResult(
                 "SELECT column_name FROM information_schema.columns WHERE table_name=? AND table_schema=?;",
                 jdbcTemplate, tableName, dbConnection.getSchema());
+    }
+
+    private void validateTableName(String name, String tableName) throws Exception {
+        if (!getTables(name).keySet().contains(tableName)) {
+            throw new RuntimeException(name + " does not contain table: " + tableName);
+        }
     }
 
     public Map<String, List<String>> previewData(String name, String tableName, Integer limit, Integer offset) throws Exception {
